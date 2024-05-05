@@ -93,30 +93,54 @@ status_t movimenta(char* tab, movimento_t* jog) {
     dfCol = oCol - dCol;
     o = *(tab + oLin * NLIN + oCol);
     d = *(tab + dLin * NLIN + dCol);
-
     if (oLin == dLin && (dfCol != -2 && dfCol != 2)) {
         return INVALIDO;
-    } else if (oCol == dCol && (dfLin != -2 && dfLin != 2)) {
+    }
+    else if (oCol == dCol && (dfLin != -2 && dfLin != 2)) {
         return INVALIDO;
-    } else if (d == VZ && o == OC && (oLin == dLin || oCol == dCol)) {
-        *(tab + oLin * NLIN + oCol) = VZ;
-        *(tab + dLin * NLIN + dCol) = OC;
+    }
+    else if (d == VZ && o == OC && (oLin == dLin || oCol == dCol)) {
         if (oLin == dLin) {
             if (oCol > dCol) {
-                *(tab + oLin * NLIN + (oCol - 1)) = VZ;
-            } else {
-                *(tab + oLin * NLIN + (oCol + 1)) = VZ;
-            }
-        } else {
-            if (oLin > dLin) {
-                *(tab + (oLin-1) * NLIN + oCol) = VZ;
+                if (*(tab + oLin * NLIN + (oCol - 1)) != VZ && *(tab + oLin * NLIN + (oCol - 1)) != NU) {
+                    *(tab + oLin * NLIN + (oCol - 1)) = VZ;
+                }
+                else {
+                    return INVALIDO;
+                }
             }
             else {
-                *(tab + (oLin + 1) * NLIN + oCol) = VZ;
+                if (*(tab + oLin * NLIN + (oCol + 1)) != VZ && *(tab + oLin * NLIN + (oCol + 1)) != NU) {
+                    *(tab + oLin * NLIN + (oCol + 1)) = VZ;
+                }
+                else {
+                    return INVALIDO;
+                }
             }
         }
+        else {
+            if (oLin > dLin) {
+                if (*(tab + (oLin - 1) * NLIN + oCol) != VZ && *(tab + (oLin - 1) * NLIN + oCol) != NU) {
+                    *(tab + (oLin - 1) * NLIN + oCol) = VZ;
+                }
+                else {
+                    return INVALIDO;
+                }
+            }
+            else {
+                if (*(tab + (oLin + 1) * NLIN + oCol) != VZ && *(tab + (oLin + 1) * NLIN + oCol) != NU) {
+                    *(tab + (oLin + 1) * NLIN + oCol) = VZ;
+                }
+                else {
+                    return INVALIDO;
+                }
+            }
+        }
+        *(tab + oLin * NLIN + oCol) = VZ;
+        *(tab + dLin * NLIN + dCol) = OC;
         return OK;
-    } else if (o == VZ) {
+    }
+    else if (o == VZ) {
         return VAZIO;
     } else if (d == OC) {
         return OCUPADO;
@@ -137,11 +161,32 @@ status_t confereJogo(char* tab) {
                 case OC:
                     qtdpieces++;
 
-                    if (*(tab + (i - 1) * 7 + j) == VZ && *(tab + (i + 1) * 7 + j) == VZ && *(tab + i * 7 + (j - 1)) == VZ && *(tab + i * 7 + (j + 1)) == VZ) {
-                        qtdfail++;
-                    }
+                    char up = *(tab + (i - 1) * 7 + j),
+                        down = *(tab + (i + 1) * 7 + j),
+                        left = *(tab + i * 7 + (j - 1)),
+                        right = *(tab + i * 7 + (j + 1));
 
-                    break;
+
+                    if ((up == VZ || up == NU) && (down == VZ || down == NU) && (left == VZ || left == NU) && (right == VZ || right == NU)) {
+                        qtdfail++;
+                        break;
+                    }
+                    else if (i == 0 && down == VZ) {
+                        qtdfail++;
+                        break;
+                    }
+                    else if (i == 6 && up == VZ) {
+                        qtdfail++;
+                        break;
+                    }
+                    else if (j == 0 && left == VZ) {
+                        qtdfail++;
+                        break;
+                    }
+                    else if (j == 6 && right == VZ) {
+                        qtdfail++;
+                        break;
+                    }
             }
         }
     }
