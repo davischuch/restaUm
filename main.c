@@ -23,6 +23,8 @@
 #include <string.h>
 #include <locale.h>
 #include "restaUm.h"
+#include <curses.h>
+#include <Windows.h>
 
 #define MAXMSG 100  // tamanho maximo de mensagens
 
@@ -41,44 +43,93 @@ void inicTab(char* tab) {
     *(tab + 3 * NLIN + 3) = VZ;
 }
 
-void showTab(char* tab) {
-    printf("  0 1 2 3 4 5 6");
-    printf("\n");
+void showTab(char* tab, int l, int c) {
+    mvprintw((LINES / 2) - 4, (COLS / 2) - 9, "  0 1 2 3 4 5 6");
     for (int i = 0; i < NLIN; i++) {
-        printf("%i ", i);
+        mvprintw((LINES / 2) - 3 + i, (COLS / 2) - 9, "%i ", i);
+        move((LINES / 2) - 3 + i, (COLS / 2) - 7);
         for (int j = 0; j < NCOL; j++) {
-            printf("%c ", * (tab + i * NLIN + j));
+            if (i == l && j == c) {
+                attron(A_REVERSE);
+                char curr = *(tab + i * NLIN + j);
+                addch(curr);
+                attroff(A_REVERSE);
+                addch(' ');
+            }
+            else {
+                char curr = *(tab + i * NLIN + j);
+                addch(curr);
+                addch(' ');
+            }
         }
-        printf("\n");
     }
-    printf("\n");
+    mvprintw((LINES / 2) + 5, (COLS / 2) - 12, "-> Selecionar (Espaco)");
+    mvprintw((LINES / 2) + 6, (COLS / 2) - 12, "-> Desistir (Esc)");
+    refresh();
 }
 
-status_t qualJogada(movimento_t* jog) {
-    char s;
-    do {
-        printf("Deseja continuar?\n");
-        printf("Sim (S) - Nao (N): ");
-        scanf_s(" %c", &s);
-    } while (s != 's' && s != 'S' && s != 'n' && s != 'N');
-    switch (s) {
-        case 's':
-        case 'S':
-            printf("Insira as coordenadas da peça que deseja mover\n");
-            printf("Linha: ");
-            scanf_s("%d", &jog->origem.lin);
-            printf("Coluna: ");
-            scanf_s("%d", &jog->origem.col);
-            printf("Insira as coordenadas do destino da peça\n");
-            printf("Linha: ");
-            scanf_s("%d", &jog->destino.lin);
-            printf("Coluna: ");
-            scanf_s("%d", &jog->destino.col);
+status_t qualJogada(char* tab, movimento_t* jog) {
+    char cha;
+    int l = 3, c = 3, ch, stat = 0;
 
-            return OK;
-        case 'n':
-        case 'N':
-            return DERROTA;
+    do {
+        do {
+            cha = getch();
+            ch = cha;
+        } while ((ch != 87 && ch != 119) && (ch != 65 && ch != 97) && (ch != 83 && ch != 115) && (ch != 68 && ch != 100) && ch != 27 && ch != 32);
+        switch (ch) {
+            case 87: //w
+            case 119:
+                if (l <= 0) {
+                    break;
+                }
+                l--;
+                showTab(tab, l, c);
+                break;
+            case 65: //a
+            case 97:
+                if (c <= 0) {
+                    break;
+                }
+                c--;
+                showTab(tab, l, c);
+                break;
+            case 83: //s
+            case 115:
+                if (l >= 6) {
+                    break;
+                }
+                l++;
+                showTab(tab, l, c);
+                break;
+            case 68: //d
+            case 100:
+                if (c >= 6) {
+                    break;
+                }
+                c++;
+                showTab(tab, l, c);
+                break;
+            case 27: //esc
+                stat = -1;
+                break;
+            case 32: //enter
+                stat++;
+                if ((stat % 2) != 0) {
+                    jog->origem.lin = l;
+                    jog->origem.col = c;
+                } else {
+                    jog->destino.lin = l;
+                    jog->destino.col = c;
+                }
+                break;
+        }
+    } while (stat != 2 && stat != -1);
+
+    if (stat == 2) {
+        return OK;
+    } else {
+        return DERROTA;
     }
 }
 
@@ -99,22 +150,38 @@ status_t movimenta(char* tab, movimento_t* jog) {
     } else if (oCol == dCol && (dfLin != -2 && dfLin != 2)) {
         return INVALIDO;
     } else if (d == VZ && o == OC && (oLin == dLin || oCol == dCol)) {
-        *(tab + oLin * NLIN + oCol) = VZ;
-        *(tab + dLin * NLIN + dCol) = OC;
         if (oLin == dLin) {
             if (oCol > dCol) {
-                *(tab + oLin * NLIN + (oCol - 1)) = VZ;
+                if (*(tab + oLin * NLIN + (oCol - 1)) != VZ && *(tab + oLin * NLIN + (oCol - 1)) != NU) {
+                    *(tab + oLin * NLIN + (oCol - 1)) = VZ;
+                } else {
+                    return INVALIDO;
+                }
             } else {
-                *(tab + oLin * NLIN + (oCol + 1)) = VZ;
+                if (*(tab + oLin * NLIN + (oCol + 1)) != VZ && *(tab + oLin * NLIN + (oCol + 1)) != NU) {
+                    *(tab + oLin * NLIN + (oCol + 1)) = VZ;
+                } else {
+                    return INVALIDO;
+                }
             }
         } else {
             if (oLin > dLin) {
-                *(tab + (oLin-1) * NLIN + oCol) = VZ;
+                if (*(tab + (oLin - 1) * NLIN + oCol) != VZ && *(tab + (oLin - 1) * NLIN + oCol) != NU) {
+                    *(tab + (oLin - 1) * NLIN + oCol) = VZ;
+                } else {
+                    return INVALIDO;
+                }
             }
             else {
-                *(tab + (oLin + 1) * NLIN + oCol) = VZ;
+                if (*(tab + (oLin + 1) * NLIN + oCol) != VZ && *(tab + (oLin + 1) * NLIN + oCol) != NU) {
+                    *(tab + (oLin + 1) * NLIN + oCol) = VZ;
+                } else {
+                    return INVALIDO;
+                }
             }
         }
+        *(tab + oLin * NLIN + oCol) = VZ;
+        *(tab + dLin * NLIN + dCol) = OC;
         return OK;
     } else if (o == VZ) {
         return VAZIO;
@@ -137,11 +204,28 @@ status_t confereJogo(char* tab) {
                 case OC:
                     qtdpieces++;
 
-                    if (*(tab + (i - 1) * 7 + j) == VZ && *(tab + (i + 1) * 7 + j) == VZ && *(tab + i * 7 + (j - 1)) == VZ && *(tab + i * 7 + (j + 1)) == VZ) {
-                        qtdfail++;
-                    }
+                    char up = *(tab + (i - 1) * 7 + j),
+                    down = *(tab + (i + 1) * 7 + j),
+                    left = *(tab + i * 7 + (j - 1)),
+                    right = *(tab + i * 7 + (j + 1));   
 
-                    break;
+
+                    if ((up == VZ || up == NU) && (down == VZ || down == NU) && (left == VZ || left == NU) && (right == VZ || right == NU)) {
+                        qtdfail++;
+                        break;
+                    } else if (i == 0 && down == VZ) {
+                        qtdfail++;
+                        break;
+                    } else if (i == 6 && up == VZ) {
+                        qtdfail++;
+                        break;
+                    } else if (j == 0 && left == VZ) {
+                        qtdfail++;
+                        break;
+                    } else if (j == 6 && right == VZ) {
+                        qtdfail++;
+                        break;
+                    }
             }
         }
     }
@@ -162,46 +246,102 @@ int main() {
     movimento_t jogada;          // movimento a realizar
     char msg[MAXMSG];            // mensagem para usuario
     unsigned int numJogadas = 0; // numero de jogadas realizadas
+    int o;
+    char option;
 
-    // Inicializacao
+
     setlocale(LC_ALL, "");       // caracteres da lingua portuguesa
-    inicTab(&tabRestaUm);        // preenche tabuleiro inicial
-    showTab(&tabRestaUm);        // exibe o tabulero
+    initscr();
+    raw();
+    noecho();
+    keypad(stdscr, TRUE);
+    start_color();
+    curs_set(0);
+    resize_term(300, 100); //row: 29; col: 121
+    init_pair(1, COLOR_GREEN, COLOR_BLACK);
+    attron(COLOR_PAIR(1));
 
-    // Laco principal
+    move((LINES / 2) - 1, (COLS / 2) - 4);
+    char* intro = "RESTA UM";
+    for (int i = 0; i < 8; i++) {
+        char curr = intro[i];
+        addch(curr);
+        Sleep(200);
+        refresh();
+    }
+    Sleep(1800);
+    flash();
+    clear();
+
+    mvprintw((LINES / 2) - 12, (COLS / 2) - 40, "=========================--- Bem vindo a: ---====================================");
+    mvprintw((LINES / 2) - 11, (COLS / 2) - 40, " *******   ********  ******** **********     **           **     ** ****     ****");
+    mvprintw((LINES / 2) - 10, (COLS / 2) - 40, "/**////** /**/////  **////// /////**///     ****         /**    /**/**/**   **/**");
+    mvprintw((LINES / 2) - 9, (COLS / 2) - 40,  "/**   /** /**      /**           /**       **//**        /**    /**/**//** ** /**");
+    mvprintw((LINES / 2) - 8, (COLS / 2) - 40,  "/*******  /******* /*********    /**      **  //**       /**    /**/** //***  /**");
+    mvprintw((LINES / 2) - 7, (COLS / 2) - 40,  "/**///**  /**////  ////////**    /**     **********      /**    /**/**  //*   /**");
+    mvprintw((LINES / 2) - 6, (COLS / 2) - 40,  "/**  //** /**             /**    /**    /**//////**      /**    /**/**   /    /**");
+    mvprintw((LINES / 2) - 5, (COLS / 2) - 40,  "/**   //**/******** ********     /**    /**     /**      //******* /**        /**");
+    mvprintw((LINES / 2) - 4, (COLS / 2) - 40,  "//     // //////// ////////      //     //      //        ///////  //         // ");
+    mvprintw((LINES / 2) - 3, (COLS / 2) - 40,  "=================================================================================");
+    
+
     do {
-        estado = qualJogada(&jogada);
-        if (estado != DERROTA) { // se não pedir para sair, segue o jogo
-            estado = movimenta(&tabRestaUm, &jogada);
-            switch (estado) {
-                case INVALIDO:
-                    strncpy_s(msg, MAXMSG, "Movimento inválido\n", MAXMSG);
-                    break;
-                case VAZIO:
-                    strncpy_s(msg, MAXMSG, "Sem peças a mover\n", MAXMSG);
-                    break;
-                case OCUPADO:
-                    strncpy_s(msg, MAXMSG, "Posição destino ocupada\n", MAXMSG);
-                    break;
+        mvprintw((LINES / 2) + 3, (COLS / 2) - 14, "     -> NOVO JOGO (N)      ");
+        mvprintw((LINES / 2) + 5, (COLS / 2) - 14, "-> Encerrar programa (Esc) ");
 
-                default:
-                    showTab(&tabRestaUm);
-                    numJogadas++;
-                    estado = confereJogo(&tabRestaUm);
-                    switch (estado) {
-                        case VITORIA:
-                            strncpy_s(msg, MAXMSG, "Parabéns, sobrou só um!\n", MAXMSG);
-                            break;
-                        case DERROTA:
-                            strncpy_s(msg, MAXMSG, "Acabaram as jogadas!\n", MAXMSG);
-                            break;
-                        default:
-                            strncpy_s(msg, MAXMSG, "Jogo continua...\n", MAXMSG);
-                    }
-            }
-            printf(msg);
-        } // fim if derrota
+        option = getch();
+        o = option;
+    } while (o != 27 && o != 78 && o != 110);
 
-    } while (estado != VITORIA && estado != DERROTA);
-    printf("Fim de jogo com %d rodadas!\n", numJogadas);
-}// fim main
+    if (o == 27) {
+        endwin();
+    } else {
+        // Inicializacao
+        flash();
+        clear();
+        
+        inicTab(&tabRestaUm);        // preenche tabuleiro inicial
+        showTab(&tabRestaUm, 3, 3);  // exibe o tabulero
+
+        // Laco principal
+        do {
+            mvprintw((LINES / 2) - 7, (COLS / 2) - 9, "--- %i Rodada ---", numJogadas + 1);
+            estado = qualJogada(&tabRestaUm, &jogada);
+            if (estado != DERROTA) { // se não pedir para sair, segue o jogo
+                estado = movimenta(&tabRestaUm, &jogada);
+                switch (estado) {
+                    case INVALIDO:
+                        strncpy_s(msg, MAXMSG, "Movimento invalido     \0", MAXMSG);
+                        break;
+                    case VAZIO:
+                        strncpy_s(msg, MAXMSG, "Sem pecas a mover      \0", MAXMSG);
+                        break;
+                    case OCUPADO:
+                        strncpy_s(msg, MAXMSG, "Posicao destino ocupada\0", MAXMSG);
+                        break;
+
+                    default:
+                        showTab(&tabRestaUm, 3, 3);
+                        numJogadas++;
+                        estado = confereJogo(&tabRestaUm);
+                        switch (estado) {
+                            case VITORIA:
+                                strncpy_s(msg, MAXMSG, "Parabens, sobrou so um!\0", MAXMSG);
+                                break;
+                            case DERROTA:
+                                strncpy_s(msg, MAXMSG, "Acabaram as jogadas!   \0", MAXMSG);
+                                break;
+                            default:
+                                strncpy_s(msg, MAXMSG, "Jogo continua...       \0", MAXMSG);
+                        }
+                }
+                for (int i = 0; msg[i] != '\0'; i++) {
+                    mvprintw((LINES / 2) - 6, (COLS / 2) - 9 + i, "%c", msg[i]);
+                }
+                refresh();
+            } // fim if derrota
+
+        } while (estado != VITORIA && estado != DERROTA);
+        printf("Fim de jogo com %d rodadas!", numJogadas);
+    }
+} // fim main

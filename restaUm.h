@@ -61,7 +61,7 @@ void showTab(char* tab);
 * @retval OK - jogador definiu a movimentacao
           DERROTA - jogador desistiu do jogo
 */
-status_t qualJogada(movimento_t* jog);
+status_t qualJogada(char* tab, movimento_t* jog);
 
 /*
 * @brief  Executa a movimentacao solicitada
@@ -81,6 +81,6 @@ status_t movimenta(char* tab, movimento_t* jog);
           VITORIA - restou um, acabou
           DERROTA - nada mais a fazer, fim de jogo
 */
-status_t confereJogo(char* tab);
+status_t confereJogo(char* tab, movimento_t* jog);
 
 #endif //_RESTA_UM_H_
