@@ -1,4 +1,4 @@
-/**********************************************************
+ï»¿/**********************************************************
 * @file     restaUm.h
 * @brief    Resta Um - defines, tipos dados e prototipos
 * @author   Marcos Zuccolotto, Davi Schuch
@@ -14,8 +14,9 @@
 
 // Marcadores do tabuleiro
 #define  NU ' '  // Ponto invalido/proibido
-#define  OC '*'  // Ponto ocupado
-#define  VZ '_'  // Ponto livre/vazio
+#define  OC 'o'  // Ponto ocupado
+#define  VZ '-'  // Ponto livre/vazio
+#define  AC '*'  // Ponto atual
 
 /* Tipos de dados */
 // Posicao da peca no tabuleiro
@@ -33,7 +34,7 @@ typedef struct {
 
 typedef enum {
     OK = 0,   // 0 - movimento executado, segue o jogo
-    INVALIDO, // 1 - não existe peca a pular sobre/retira/fora tabuleiro/movimento longo, curto ou em diagonal
+    INVALIDO, // 1 - nï¿½o existe peca a pular sobre/retira/fora tabuleiro/movimento longo, curto ou em diagonal
     OCUPADO,  // 2 - posicao destino ocupada
     VAZIO,    // 3 - posicao origem vazia
     VITORIA,  // 4 - vitoria - fim jogo
@@ -66,17 +67,25 @@ void inicTab(char* tab) {
 * @param  tabuleiro
 * @retval none
 */
-void showTab(char* tab) {
-    printf("  0 1 2 3 4 5 6");
+void showTab(char* tab, int l, int c) {
+    system("cls");
+    printf("  A B C D E F G");
     printf("\n");
     for (int i = 0; i < NLIN; i++) {
         printf("%i ", i);
         for (int j = 0; j < NCOL; j++) {
-            printf("%c ", *(tab + i * NLIN + j));
+            if (i == l && j == c) {
+                printf("%c ", AC);
+            } else {
+                printf("%c ", *(tab + i * NLIN + j));
+            }
         }
         printf("\n");
     }
     printf("\n");
+
+    printf("-> Selecionar (Espaco)\n");
+    printf("-> Desistir (Esc)\n\n");
 }
 
 /**
@@ -85,30 +94,69 @@ void showTab(char* tab) {
 * @retval OK - jogador definiu a movimentacao
           DERROTA - jogador desistiu do jogo
 */
-status_t qualJogada(movimento_t* jog) {
-    char s;
-    do {
-        printf("Deseja continuar?\n");
-        printf("Sim (S) - Nao (N): ");
-        scanf_s(" %c", &s);
-    } while (s != 's' && s != 'S' && s != 'n' && s != 'N');
-    switch (s) {
-    case 's':
-    case 'S':
-        printf("Insira as coordenadas da peça que deseja mover\n");
-        printf("Linha: ");
-        scanf_s("%d", &jog->origem.lin);
-        printf("Coluna: ");
-        scanf_s("%d", &jog->origem.col);
-        printf("Insira as coordenadas do destino da peça\n");
-        printf("Linha: ");
-        scanf_s("%d", &jog->destino.lin);
-        printf("Coluna: ");
-        scanf_s("%d", &jog->destino.col);
+status_t qualJogada(char *tab, movimento_t* jog) {
+    char cha;
+    int l = 3, c = 3, ch, stat = 0;
 
+    do {
+        do {
+            cha = getch();
+            ch = cha;
+        } while ((ch != 87 && ch != 119) && (ch != 65 && ch != 97) && (ch != 83 && ch != 115) && (ch != 68 && ch != 100) && ch != 27 && ch != 32);
+        switch (ch) {
+        case 87: //w
+        case 119:
+            if (l <= 0) {
+                break;
+            }
+            l--;
+            showTab(tab, l, c);
+            break;
+        case 65: //a
+        case 97:
+            if (c <= 0) {
+                break;
+            }
+            c--;
+            showTab(tab, l, c);
+            break;
+        case 83: //s
+        case 115:
+            if (l >= 6) {
+                break;
+            }
+            l++;
+            showTab(tab, l, c);
+            break;
+        case 68: //d
+        case 100:
+            if (c >= 6) {
+                break;
+            }
+            c++;
+            showTab(tab, l, c);
+            break;
+        case 27: //esc
+            stat = -1;
+            break;
+        case 32: //enter
+            stat++;
+            if ((stat % 2) != 0) {
+                jog->origem.lin = l;
+                jog->origem.col = c;
+            }
+            else {
+                jog->destino.lin = l;
+                jog->destino.col = c;
+            }
+            break;
+        }
+    } while (stat != 2 && stat != -1);
+
+    if (stat == 2) {
         return OK;
-    case 'n':
-    case 'N':
+    }
+    else {
         return DERROTA;
     }
 }
