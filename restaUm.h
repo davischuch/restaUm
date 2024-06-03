@@ -1,10 +1,11 @@
 ﻿/**********************************************************
 * @file     restaUm.h
 * @brief    Resta Um - defines, tipos dados e prototipos
-* @author   Marcos Zuccolotto, Davi Schuch
+* @author   Davi Schuch, Edrick de Oliveira, Marcos Zuccolotto
 * @date     abr/2024
-* @version  1.1
+* @version  1.2
 **********************************************************/
+
 #ifndef _RESTA_UM_H_   // Declaracao de guarda
 #define _RESTA_UM_H_
 
@@ -13,162 +14,100 @@
 #define NLIN 7
 
 // Marcadores do tabuleiro
-#define  NU ' '  // Ponto invalido/proibido
-#define  OC 'o'  // Ponto ocupado
-#define  VZ '-'  // Ponto livre/vazio
-#define  AC '*'  // Ponto atual
+#define  NU 'X'  // Ponto invalido/proibido
+#define  OC '*'  // Ponto ocupado
+#define  VZ 'O'  // Ponto livre/vazio
 
 /* Tipos de dados */
-// Posicao da peca no tabuleiro
 
-typedef struct {
+// Posicao peca no tabuleiro
+typedef struct
+    {
     int lin; // Posicao linha
     int col; // Posicao destino
-} posTab_t;
-
+    }posTab_t;
 // Movimento a ser realizado
-typedef struct {
-    posTab_t origem;   // Posicao inicio/origem
-    posTab_t destino; // Posicao fim
-} movimento_t;
+typedef struct
+    {
+        posTab_t origem;   // Posicao inicio/origem
+        posTab_t destino; // Posicao fim/
+    }movimento_t;
 
-typedef enum {
-    OK = 0,   // 0 - movimento executado, segue o jogo
-    INVALIDO, // 1 - n�o existe peca a pular sobre/retira/fora tabuleiro/movimento longo, curto ou em diagonal
-    OCUPADO,  // 2 - posicao destino ocupada
-    VAZIO,    // 3 - posicao origem vazia
-    VITORIA,  // 4 - vitoria - fim jogo
-    DERROTA   // 5 - nao tem mais o que fazer
-} status_t;
-
+typedef enum { OK=0 , // movimento executado, segue o jogo
+               INVALIDO, // nao existe peca a pular sobre/retira
+                         // fora tabuleiro
+                         // movimento longo, curto ou em diagonal
+               OCUPADO,  // posicao destino ocupada
+               VAZIO,    // posicao origem vazia
+               VITORIA,  // vitoria - fim jogo
+               DERROTA   // nao tem mais o que fazer
+             } status_t;
 /* Prototipos */
-/*
-* @brief  Inicializa tabuleiro
-* @param  tabuleiro
-* @retval none
-*/
-void inicTab(char* tab) {
-    for (int i = 0; i < NLIN; i++) {
-        for (int j = 0; j < NCOL; j++) {
-            *(tab + i * NLIN + j) = OC;
-
-            if (i == 0 || i == 1 || i == 5 || i == 6) {
-                if (j == 0 || j == 1 || j == 5 || j == 6) {
-                    *(tab + i * NLIN + j) = NU;
-                }
-            }
-        }
-    }
-    *(tab + 3 * NLIN + 3) = VZ;
-}
-
-/*
-* @brief  Exibe o tabuleiro
-* @param  tabuleiro
-* @retval none
-*/
-void showTab(char* tab, int l, int c) {
-    system("cls");
-    printf("  A B C D E F G");
-    printf("\n");
-    for (int i = 0; i < NLIN; i++) {
-        printf("%i ", i);
-        for (int j = 0; j < NCOL; j++) {
-            if (i == l && j == c) {
-                printf("%c ", AC);
-            } else {
-                printf("%c ", *(tab + i * NLIN + j));
-            }
-        }
-        printf("\n");
-    }
-    printf("\n");
-
-    printf("-> Selecionar (Espaco)\n");
-    printf("-> Desistir (Esc)\n\n");
-}
 
 /**
-* @brief  Entrada dados da jogada
-* @param  movimentacao a realizar
-* @retval OK - jogador definiu a movimentacao
-          DERROTA - jogador desistiu do jogo
+@brief Inicializa tabuleiro
+@param tabuleiro
+@retval none
 */
-status_t qualJogada(char *tab, movimento_t* jog) {
-    char cha;
-    int l = 3, c = 3, ch, stat = 0;
+void inicTab(char *tab);
+/**
+@brief Exibe o tabuleiro
+@param tabuleiro
+@retval none
+*/
+void showTab(char *tab);
 
+/**
+@brief Entrada dados da jogada
+@param movimentacao a realizar
+@retval OK - jogador definiu a movimentacao
+        DERROTA - jogador desistiu do jogo
+*/
+status_t qualJogada(movimento_t *jogada)
+{
+    char s;
     do {
-        do {
-            cha = getch();
-            ch = cha;
-        } while ((ch != 87 && ch != 119) && (ch != 65 && ch != 97) && (ch != 83 && ch != 115) && (ch != 68 && ch != 100) && ch != 27 && ch != 32);
-        switch (ch) {
-        case 87: //w
-        case 119:
-            if (l <= 0) {
-                break;
-            }
-            l--;
-            showTab(tab, l, c);
-            break;
-        case 65: //a
-        case 97:
-            if (c <= 0) {
-                break;
-            }
-            c--;
-            showTab(tab, l, c);
-            break;
-        case 83: //s
-        case 115:
-            if (l >= 6) {
-                break;
-            }
-            l++;
-            showTab(tab, l, c);
-            break;
-        case 68: //d
-        case 100:
-            if (c >= 6) {
-                break;
-            }
-            c++;
-            showTab(tab, l, c);
-            break;
-        case 27: //esc
-            stat = -1;
-            break;
-        case 32: //enter
-            stat++;
-            if ((stat % 2) != 0) {
-                jog->origem.lin = l;
-                jog->origem.col = c;
-            }
-            else {
-                jog->destino.lin = l;
-                jog->destino.col = c;
-            }
-            break;
-        }
-    } while (stat != 2 && stat != -1);
+        printf("\nDeseja continuar?\n");
+        printf("Sim (S) - Nao (N): ");
+        scanf_s(" %c", &s);
+    } while (s != 's' && s != 'S' && s != 'n' && s != 'N');
+    switch (s) {
+    case 's':
+    case 'S':
+        printf("\nInsira as coordenadas da peca que deseja mover\n");
+        printf("Linha: ");
+        scanf_s("%d", &jogada->origem.lin);
+        printf("Coluna: ");
+        scanf_s("%d", &jogada->origem.col);
+        printf("\nInsira as coordenadas do destino da peca\n");
+        printf("Linha: ");
+        scanf_s("%d", &jogada->destino.lin);
+        printf("Coluna: ");
+        scanf_s("%d", &jogada->destino.col);
 
-    if (stat == 2) {
+        printf("\n");
+
+        //ajustar para que o usuario digite de 1 a 7 ao inves de 0 a 6
+        jogada->origem.lin--;
+        jogada->origem.col--;
+        jogada->destino.lin--;
+        jogada->destino.col--;
+
         return OK;
-    }
-    else {
+    case 'n':
+    case 'N':
         return DERROTA;
     }
 }
 
-/*
-* @brief  Executa a movimentacao solicitada
-* @param  tabuleiro
-* @param  movimentacao a realizar
-* @retval OK - movimento executado, segue o jogo
-          INVALIDO - movimento invalido
-          OCUPADO - posicao destino ocupada
-          VAZIO - posicao origem vazia
+/**
+@brief Executa a movimentacao solicitada
+@param tabuleiro
+@param movimentacao a realizar
+@retval OK - movimento executado, segue o jogo
+        INVALIDO - movimento invalido
+        OCUPADO - posicao destino ocupada
+        VAZIO  posicao origem vazia
 */
 status_t movimenta(char* tab, movimento_t* jog) {
     int oLin, oCol, dLin, dCol, dfLin, dfCol;
@@ -230,73 +169,54 @@ status_t movimenta(char* tab, movimento_t* jog) {
     }
     else if (o == VZ) {
         return VAZIO;
-    }
-    else if (d == OC) {
+    } else if (d == OC) {
         return OCUPADO;
-    }
-    else {
+    } else {
         return INVALIDO;
     }
 }
 
-/*
-* @brief  Confere possibilidades de continuacao
-* @param  tabuleiro
-* @retval OK - segue o jogo
-          VITORIA - restou um, acabou
-          DERROTA - nada mais a fazer, fim de jogo
+/**
+@brief Confere possibilidades de continuacao
+@param tabuleiro
+@retval OK -  segue o jogo
+        VITORIA - restou um, acabou
+        DERROTA - nada mais a fazer, fim de jogo
 */
-status_t confereJogo(char* tab) {
-    int qtdblank = 0, qtdpieces = 0, qtdfail = 0;
+status_t confereJogo(char *tab)
+{
+    char *elem;
+    int qtd_pecas=0;
 
-    for (int i = 0; i < NLIN; i++) {
-        for (int j = 0; j < NCOL; j++) {
-            switch (*(tab + i * NLIN + j)) {
-            case VZ:
-                qtdblank++;
-                break;
-            case OC:
-                qtdpieces++;
+    //itera atraves dos elementos no tabuleiro
+    for(int i=0; i<NLIN; i++)
+    {
+        for(int j=0; j<NCOL; j++)
+        {
+            //para melhor legibilidade, assinala o elemento atual a um ponteiro
+            elem = tab + NCOL*i + j;
 
-                char up = *(tab + (i - 1) * 7 + j),
-                    down = *(tab + (i + 1) * 7 + j),
-                    left = *(tab + i * 7 + (j - 1)),
-                    right = *(tab + i * 7 + (j + 1));
-
-
-                if ((up == VZ || up == NU) && (down == VZ || down == NU) && (left == VZ || left == NU) && (right == VZ || right == NU)) {
-                    qtdfail++;
-                    break;
-                }
-                else if (i == 0 && down == VZ) {
-                    qtdfail++;
-                    break;
-                }
-                else if (i == 6 && up == VZ) {
-                    qtdfail++;
-                    break;
-                }
-                else if (j == 0 && left == VZ) {
-                    qtdfail++;
-                    break;
-                }
-                else if (j == 6 && right == VZ) {
-                    qtdfail++;
-                    break;
-                }
+            //se o elemento for uma peca:
+            if (*elem == '*')
+            {
+                //somar 1 a quantidade
+                qtd_pecas++;
+                //OK se houver uma peça adjacente seguida por um espaço vazio, sem que um destes ultrapasse a borda do tabuleiro
+                if ((*(elem+1)=='*' && *(elem+2)=='O' && j<5) ||
+                    (*(elem-1)=='*' && *(elem-2)=='O' && j>1) ||
+                    (*(elem-NCOL)=='*' && *(elem-NCOL*2)=='O' && i>1) ||
+                    (*(elem+NCOL)=='*' && *(elem+NCOL*2)=='O' && i<5)
+                )   return OK;
             }
         }
     }
 
-    if (qtdblank == 32 && qtdpieces == 1) {
-        return VITORIA;
-    }
-    else if (qtdfail == qtdpieces) {
+    //se nao e possivel executar mais jogadas:
+        //VITORIA se ainda resta apenas 1 peca
+        if(qtd_pecas==1)    return VITORIA;
+
+        //DERROTA caso contrario
         return DERROTA;
-    }
-    else {
-        return OK;
-    }
 }
 
-#endif //_RESTA_UM_H_
+#endif // _RESTA_UM_H_
