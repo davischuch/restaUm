@@ -4,8 +4,7 @@
 * @author   Davi Schuch, Edrick de Oliveira, Marcos Zuccolotto
 * @date     abr/2024
 * @version  1.2
-**********************************************************/
-
+***********************************************************
 #ifndef _RESTA_UM_H_   // Declaracao de guarda
 #define _RESTA_UM_H_
 
@@ -42,8 +41,8 @@ typedef enum { OK=0 , // movimento executado, segue o jogo
                VITORIA,  // vitoria - fim jogo
                DERROTA   // nao tem mais o que fazer
              } status_t;
-/* Prototipos */
 
+/* Prototipos */
 /**
 @brief Inicializa tabuleiro
 @param tabuleiro
@@ -56,6 +55,36 @@ void inicTab(char *tab);
 @retval none
 */
 void showTab(char *tab);
+
+int toNumber(char *c) {
+    //se for maiuscula
+    if (*c >= 'A' && *c <= 'Z') {
+        //transformar em minuscula
+	*c += ('a' - 'A');
+    }
+    switch (*c) {
+    case 'a':
+	return 1;
+	break;
+    case 'a':
+	return 2;
+        break;
+    case 'a':
+	return 3;
+	break;
+    case 'a':
+	return 4;
+	break;
+    case 'a':
+	return 5;
+	break;
+    case 'a':
+	return 6;
+	break;
+    case 'a':
+	return 7;
+	break;
+}
 
 /**
 @brief Entrada dados da jogada
@@ -110,8 +139,11 @@ status_t qualJogada(movimento_t *jogada)
         VAZIO  posicao origem vazia
 */
 status_t movimenta(char* tab, movimento_t* jog) {
+    //definicao das variaveis
     int oLin, oCol, dLin, dCol, dfLin, dfCol;
     char d, o;
+
+    //posicoes/coordenadas de origem e destino
     oLin = *(&jog->origem.lin);
     oCol = *(&jog->origem.col);
     dLin = *(&jog->destino.lin);
@@ -120,55 +152,79 @@ status_t movimenta(char* tab, movimento_t* jog) {
     dfCol = oCol - dCol;
     o = *(tab + oLin * NLIN + oCol);
     d = *(tab + dLin * NLIN + dCol);
+
+    //invalido se o destino nao estiver a duas pecas da origem
     if (oLin == dLin && (dfCol != -2 && dfCol != 2)) {
         return INVALIDO;
     }
     else if (oCol == dCol && (dfLin != -2 && dfLin != 2)) {
         return INVALIDO;
     }
-    else if (d == VZ && o == OC && (oLin == dLin || oCol == dCol)) {
+
+    //se as coordenadas estiverem alinhadas 
+    else if (d == VZ && o == OC) {
+	//se a peca se mover na mesma linha
         if (oLin == dLin) {
+	    //se estiver a direita do destino
             if (oCol > dCol) {
+		//se a posicao entre o destino e a origem nao for vazia ou nula
                 if (*(tab + oLin * NLIN + (oCol - 1)) != VZ && *(tab + oLin * NLIN + (oCol - 1)) != NU) {
+		    //posicao intermediaria fica vazia
                     *(tab + oLin * NLIN + (oCol - 1)) = VZ;
                 }
+		//se a posicao entre o destino e a origem for vazia ou nula
                 else {
                     return INVALIDO;
                 }
             }
+	    //se estiver a esquerda do destino
             else {
+		//se a posicao entre o destino e a origem nao for vazia ou nula
                 if (*(tab + oLin * NLIN + (oCol + 1)) != VZ && *(tab + oLin * NLIN + (oCol + 1)) != NU) {
+		    //posicao intermediaria fica vazia
                     *(tab + oLin * NLIN + (oCol + 1)) = VZ;
                 }
+		//se a posicao entre o destino e a origem for vazia ou nula
                 else {
                     return INVALIDO;
                 }
             }
         }
+	//se a peca se mover na mesma coluna
         else {
+	    //se estiver acima do destino
             if (oLin > dLin) {
+		//se a posicao entre o destino e a origem nao for vazia ou nula
                 if (*(tab + (oLin - 1) * NLIN + oCol) != VZ && *(tab + (oLin - 1) * NLIN + oCol) != NU) {
+		    //posicao intermediaria fica vazia
                     *(tab + (oLin - 1) * NLIN + oCol) = VZ;
                 }
+		//se a posicao entre o destino e a origem for vazia ou nula
                 else {
                     return INVALIDO;
                 }
             }
+	    //se estiver abaixo do destino
             else {
+		//se a posicao entre o destino e a origem nao for vazia ou nula
                 if (*(tab + (oLin + 1) * NLIN + oCol) != VZ && *(tab + (oLin + 1) * NLIN + oCol) != NU) {
+		    //posicao intermediaria fica vazia
                     *(tab + (oLin + 1) * NLIN + oCol) = VZ;
                 }
+		//se a posicao entre o destino e a origem for vazia ou nula
                 else {
                     return INVALIDO;
                 }
             }
         }
-        *(tab + oLin * NLIN + oCol) = VZ;
-        *(tab + dLin * NLIN + dCol) = OC;
+        *(tab + oLin * NLIN + oCol) = VZ; //origem fica vazio
+        *(tab + dLin * NLIN + dCol) = OC; //destino fica ocupado
         return OK;
     }
+    //se a origem for vazia
     else if (o == VZ) {
         return VAZIO;
+    //se o destino for ocupado
     } else if (d == OC) {
         return OCUPADO;
     } else {
