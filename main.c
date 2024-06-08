@@ -1,16 +1,17 @@
 ﻿/**********************************************************
+* @file     main.c
 * @brief    Trabalho trimestral - Resta Um
-* @author   Marcos Zuccolotto, Davi Schuch
-* @date     abr/2024
-* @version  1.1
-*
+* @author   Davi Scunch, Edrick de Oliveira, Marcos Zuccolotto
+* @date     jun/2024
+* @version  1.2
+
 * Fundacao Liberato - Curso de Eletronica
 * Elementos de programacao  - prof. Marcos Zuccolotto
 *
 * Trabalho trimestral - Struct / enum / ponteiros
 *
 * Implemente as funcoes abaixo comforme especificacao,
-* respeitando os par�metros e tipos de dados definidos,
+* respeitando os parametros e tipos de dados definidos,
 * seguindo as orientacoes dadas
 * - qualJogada()
 * - movimenta()
@@ -29,45 +30,45 @@
 int main() {
     // Variaveis
     char tabRestaUm[NLIN][NCOL]; // tabuleiro
-    status_t estado = OK;        // resultado da fun��o
+    status_t estado = OK;        // resultado da funcao
     movimento_t jogada;          // movimento a realizar
     char msg[MAXMSG];            // mensagem para usuario
     unsigned int numJogadas = 0; // numero de jogadas realizadas
 
     // Inicializacao
     setlocale(LC_ALL, "");       // caracteres da lingua portuguesa
-    inicTab(&tabRestaUm);        // preenche tabuleiro inicial
-    showTab(&tabRestaUm, 3, 3);  // exibe o tabulero
+    inicTab(*tabRestaUm);        // preenche tabuleiro inicial
+    showTab(*tabRestaUm);        // exibe o tabulero
 
     // Laco principal
     do {
-        estado = qualJogada(&tabRestaUm, &jogada);
-        if (estado != DERROTA) { // se n�o pedir para sair, segue o jogo
-            estado = movimenta(&tabRestaUm, &jogada);
+        estado = qualJogada(*tabRestaUm, &jogada);
+        if (estado != DERROTA) { // se nao pedir para sair, segue o jogo
+            estado = movimenta(*tabRestaUm, &jogada);
             switch (estado) {
             case INVALIDO:
-                strncpy_s(msg, MAXMSG, "Movimento inv�lido\n", MAXMSG);
+                strncpy(msg, "Movimento inv�lido\n", MAXMSG);
                 break;
             case VAZIO:
-                strncpy_s(msg, MAXMSG, "Sem pe�as a mover\n", MAXMSG);
+                strncpy(msg, "Sem pe�as a mover\n", MAXMSG);
                 break;
             case OCUPADO:
-                strncpy_s(msg, MAXMSG, "Posi��o destino ocupada\n", MAXMSG);
+                strncpy(msg, "Posi��o destino ocupada\n", MAXMSG);
                 break;
 
             default:
-                showTab(&tabRestaUm, 3, 3);
+                showTab(*tabRestaUm);
                 numJogadas++;
-                estado = confereJogo(&tabRestaUm);
+                estado = confereJogo(*tabRestaUm);
                 switch (estado) {
                 case VITORIA:
-                    strncpy_s(msg, MAXMSG, "Parab�ns, sobrou s� um!\n", MAXMSG);
+                    strncpy(msg, "Parab�ns, sobrou s� um!\n", MAXMSG);
                     break;
                 case DERROTA:
-                    strncpy_s(msg, MAXMSG, "Acabaram as jogadas!\n", MAXMSG);
+                    strncpy(msg, "Acabaram as jogadas!\n", MAXMSG);
                     break;
                 default:
-                    strncpy_s(msg, MAXMSG, "Jogo continua...\n", MAXMSG);
+                    strncpy(msg, "Jogo continua...\n", MAXMSG);
                 }
             }
             printf(msg);
@@ -75,4 +76,4 @@ int main() {
 
     } while (estado != VITORIA && estado != DERROTA);
     printf("Fim de jogo com %d rodadas!\n", numJogadas);
-}// fim main
+} // fim main
