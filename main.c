@@ -40,7 +40,7 @@ int main() {
     jogada.origem.col = -1;
     jogada.destino.lin = -1;
     jogada.destino.col = -1;
-    
+
     // Inicializacao
     setlocale(LC_ALL, "");                 // caracteres da lingua portuguesa
     inicTab(*tabRestaUm);                  // preenche tabuleiro inicial
@@ -103,16 +103,21 @@ void reloadTab(char* tab, int l, int c, movimento_t* jog){
     int oCol = jog->origem.col;
     int dLin = jog->destino.lin;
     int dCol = jog->destino.col;
-    
+
     printf("  A B C D E F G");
     printf("\n");
     for (int i = 0; i < NLIN; i++) {
         printf("%i ", i);
         for (int j = 0; j < NCOL; j++) {
+
             if (i == l && j == c) { //se estiver na posicao que o jogador esta
                 printf("%c ", AC);  //printa como ponto atual de escolha
             } else {
-                printf("%c ", *(tab + i * NLIN + j));
+                if (*(tab + i * NLIN + j) == NU) {
+                    printf("  ");
+                } else {
+                    printf("%c ", *(tab + i * NLIN + j));
+                }
             }
         }
         printf("\n");
@@ -121,9 +126,9 @@ void reloadTab(char* tab, int l, int c, movimento_t* jog){
     printf("-> W(cima) A(esquerda) S(baixo) D(direita)\n");
     printf("-> Selecionar (Espaco)\n");
     printf("-> Desistir   (Esc)\n\n");
-    
+
     printf("Rodada %i\n\n", numJogadas + 1);
-    
+
     //se as coordenadas de origem foram selecionadas
     if (oLin != -1 && oCol != -1) {
         printf("Origem: %i, %i\n", oLin, oCol);
@@ -143,15 +148,15 @@ void reloadTab(char* tab, int l, int c, movimento_t* jog){
 
 status_t qualJogada(char *tab, movimento_t* jog) {
     char cha; //tecla digitada
-    
+
     //linha atual; coluna atual; indice ascii da tecla digitada (necessario por causa do espaco e esc); status (-1 = fim, 0 & 1 = pecas sendo selecionadas, 2 = todas as pecas foram selecionadas)
-    int l = 3, c = 3, ch, stat = 0; 
+    int l = 3, c = 3, ch, stat = 0;
 
     //enquanto as pecas nao estiverem efetivamente movidas...
     do {
         cha = getch();
         ch = cha;
-        
+
         //apos digitado o comando, efetua a devida acao
         switch (ch) {
         case 'w':
@@ -163,7 +168,7 @@ status_t qualJogada(char *tab, movimento_t* jog) {
             break;
         case 'a':
         case 'A':
-            if (c <= 0) break; //se estiver na primeira coluna, cancela o movimento 
+            if (c <= 0) break; //se estiver na primeira coluna, cancela o movimento
             c--; //move uma linha para a esquerda (comeca em 0 e termina em 6)
             system("cls"); //limpa o terminal
             reloadTab(tab, l, c, jog); //re-printa o tabuleiro
@@ -200,7 +205,7 @@ status_t qualJogada(char *tab, movimento_t* jog) {
             break;
         default:
             break;
-        } 
+        }
     } while (stat != 2 && stat != -1);
 
     if (stat == 2) { //se os movimentos foram realizados
@@ -228,7 +233,8 @@ status_t movimenta(char* tab, movimento_t* jog) {
     //invalido se o destino nao estiver a duas pecas da origem
     if (oLin == dLin && (dfCol != -2 && dfCol != 2)) return INVALIDO;
     if (oCol == dCol && (dfLin != -2 && dfLin != 2)) return INVALIDO;
-    
+    if (oCol != dCol && oLin != dLin)                return INVALIDO;
+
     if (o == VZ) return VAZIO; //se a origem for vazia
 
     if (d == OC) return OCUPADO; //se o destino for ocupado
@@ -236,7 +242,7 @@ status_t movimenta(char* tab, movimento_t* jog) {
     if (*(tab + (oLin + (dfLin/2)) * NCOL + (oCol + (dfCol/2))) != OC) return INVALIDO; //se a peca intermediaria nao estiver ocupada
 
     if (d != VZ && o != OC) return INVALIDO; //se o destino ou origem estiverem fora dos parametros
-    
+
     *(tab + oLin * NCOL + oCol) = VZ;                             // origem fica vazia
     *(tab + (oLin + (dfLin/2)) * NCOL + (oCol + (dfCol/2))) = VZ; // peca intemediaria fica vazia
     *(tab + dLin * NCOL + dCol) = OC;                             // destino fica ocupado

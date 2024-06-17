@@ -13,10 +13,10 @@
 #define NLIN 7
 
 // Marcadores do tabuleiro
-#define NU ' '  // Ponto invalido/proibido
-#define OC 'o'  // Ponto ocupado
-#define VZ '-'  // Ponto livre/vazio
-#define AC '*'  // Ponto atual
+#define NU 'X'  // Ponto invalido/proibido
+#define OC '*'  // Ponto ocupado
+#define VZ 'O'  // Ponto livre/vazio
+#define AC '-'  // Ponto atual
 
 /* Tipos de dados */
 // Posicao da peca no tabuleiro
